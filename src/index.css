@@ -1,0 +1,193 @@
+/* Glass Manufacturing Theme Styles */
+.glass-root {
+  display: flex;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: 100vh;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+.glass-sidebar {
+  width: 320px;
+  padding: 2rem 1rem 2rem 2rem;
+  background: rgba(255, 255, 255, 0.60);
+  box-shadow: 2px 0 24px 0 rgba(72, 144, 201, 0.08);
+  border-radius: 0 20px 20px 0;
+  display: flex;
+  flex-direction: column;
+}
+.glass-comp-card {
+  border-radius: 14px;
+  background: rgba(166, 208, 239, 0.25);
+  box-shadow: 0 4px 32px 0 rgba(72, 144, 201, 0.08);
+  padding: 14px 12px 12px 10px;
+  margin-bottom: 8px;
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.glass-comp-card input {
+  margin-top: 2px;
+  padding: 5px 7px;
+  border-radius: 8px;
+  border: 1px solid #b7d0e3;
+  background: rgba(255,255,255,0.75);
+  font-size: 1rem;
+}
+.glass-mw {
+  color: #215877;
+  font-size: 0.95rem;
+  margin-top: 2px;
+}
+.glass-sidebar h2 {
+  font-weight: 600;
+  color: #0f3556;
+  margin-bottom: 1rem;
+}
+.glass-sidebar label {
+  font-size: 1rem;
+  margin-bottom: 0.85rem;
+  color: #1c4665;
+}
+.glass-sidebar label input {
+  margin-left: 7px;
+  font-size: 1rem;
+  width: 80px;
+}
+.glass-warning {
+  background: #fff4dd;
+  color: #ee721d;
+  padding: 7px 10px;
+  border-radius: 6px;
+  margin-top: 9px;
+  margin-bottom: 0.5rem;
+  font-size: 1.01rem;
+}
+
+.glass-main {
+  flex: 1 1 auto;
+  padding: 2.5rem 2.5rem 2rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.glass-title {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 1.5rem;
+}
+.glass-title h1 {
+  font-size: 2rem;
+  color: #1f386b;
+  margin: 0;
+}
+.glass-industrial {
+  font-size: 2.35rem;
+  background: linear-gradient(to right, #3c77be, #6457d4CC);
+  -webkit-background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 1px 2px #5887af70);
+}
+
+.glass-section {
+  background: rgba(246,252,255,0.77);
+  margin-bottom: 2.5rem;
+  border-radius: 16px;
+  box-shadow: 0 2px 18px 0 rgba(44, 84, 131, 0.065);
+  padding: 1.1rem 2.2rem 1.6rem 2.2rem;
+}
+.glass-gf-inputs {
+  display: flex;
+  gap: 2.5rem;
+  margin-bottom: 1.1rem;
+  flex-wrap: wrap;
+}
+.glass-gf-inputs label {
+  display: block;
+  font-size: 1.07rem;
+  color: #225089;
+  margin-bottom: 0.33rem;
+  margin-top: 0.25rem;
+}
+.glass-gf-inputs input {
+  min-width: 80px;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid #b7d0e3;
+  background: rgba(255,255,255,0.85);
+  margin-top: 0.23rem;
+  padding: 3px 6px 3px 8px;
+}
+.glass-gf-result {
+  font-weight: 600;
+  color: #2064d2;
+  margin-bottom: 1.1rem;
+  letter-spacing: 0.4px;
+}
+.glass-batch-tablecard {
+  overflow-x: auto;
+  margin-top: 0.7rem;
+}
+.glass-batch-tablecard table, .glass-gf-tablecard table {
+  width: 100%;
+  border-collapse: collapse;
+  background: rgba(255,255,255,0.82);
+  box-shadow: 0px 1px 7px 0 #81abc126;
+  border-radius: 12px;
+  overflow: hidden;
+  font-size: 1.06rem;
+  color: #17415f;
+}
+.glass-batch-tablecard th, .glass-batch-tablecard td,
+.glass-gf-tablecard th, .glass-gf-tablecard td {
+  border: 1px solid #dde6f2;
+  padding: 0.55rem 0.87rem;
+  text-align: center;
+}
+.glass-batch-tablecard th, .glass-gf-tablecard th {
+  background: #e6f0fa;
+  color: #275589;
+}
+.glass-total-row td {
+  font-weight: 700;
+  background: #cfe3ff44;
+  color: #164485;
+}
+
+.glass-suggest-menu {
+  position: absolute;
+  z-index: 30;
+  left: 0;
+  right: 0;
+  top: 34px;
+  background: rgba(255,255,255,0.91);
+  box-shadow: 0 6px 24px 0 #b6d7fc60, 0 2px 7px 0 #2678b425;
+  border-radius: 10px;
+  border: 1px solid #c7e2f6;
+  overflow-y: auto;
+  max-height: 220px;
+  min-width: 110px;
+}
+.glass-suggest-item {
+  padding: 7px 13px 7px 11px;
+  cursor: pointer;
+  color: #1c3a57;
+  background: none;
+  font-size: 1.065rem;
+  transition: background 0.13s;
+  border-bottom: 1px solid #e5f0fa;
+}
+.glass-suggest-item:last-child {
+  border-bottom: none;
+}
+.glass-suggest-active, .glass-suggest-item:hover {
+  background: #e8f2ffbb;
+  color: #104780;
+}
+
+@media (max-width: 800px) {
+  .glass-root { flex-direction: column; }
+  .glass-sidebar { width: 100%; border-radius: 0; }
+  .glass-main { padding: 1.2rem; }
+  .glass-section { padding: 0.8rem; }
+}
