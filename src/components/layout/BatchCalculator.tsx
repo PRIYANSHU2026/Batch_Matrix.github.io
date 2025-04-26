@@ -1,0 +1,80 @@
+"use client";
+
+import type { FC } from 'react';
+import { useBatch } from '@/contexts/BatchContext';
+import BatchInputForm from '@/components/forms/BatchInputForm';
+import GFCalculatorForm from '@/components/forms/GFCalculatorForm';
+import BatchResultTable from '@/components/ui/BatchResultTable';
+import VisualizationSection from '@/components/chart/VisualizationSection';
+
+const BatchCalculator: FC = () => {
+  const {
+    compResults,
+    weightPercents,
+    totalWeight,
+    desiredBatch,
+    gfResults,
+    gfWeightPercents,
+    gfTotalWeight,
+    gf
+  } = useBatch();
+
+  const hasH3BO3 = compResults.some(comp => comp.formula === 'H3BO3');
+
+  return (
+    <div className="container mx-auto px-4 py-10 max-w-7xl">
+      <header className="mb-8 text-center">
+        <div className="inline-block mb-2 px-3 py-1 bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 text-sm font-medium rounded-full">
+          Glass Manufacturing Tools
+        </div>
+        <h1 className="text-4xl font-bold leading-tight tracking-tighter mb-2 text-blue-900 dark:text-blue-100">
+          Batch Matrix Composition Calculator
+        </h1>
+        <p className="text-muted-foreground max-w-2xl mx-auto">
+          Calculate and visualize chemical compositions for glass batches with automatic molar calculations
+          and advanced gravimetric factor adjustments.
+        </p>
+      </header>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+        <div className="lg:col-span-2">
+          <h2 className="text-2xl font-semibold mb-4">Batch Composition</h2>
+          <BatchInputForm />
+        </div>
+        <div>
+          <h2 className="text-2xl font-semibold mb-4">Gravimetric Factor</h2>
+          <GFCalculatorForm />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+        <BatchResultTable
+          results={compResults}
+          weightPercents={weightPercents}
+          totalWeight={totalWeight}
+          desiredBatch={desiredBatch}
+          title="Batch Matrix Calculation"
+          description="Calculated batch weights based on matrix percentages"
+        />
+
+        {gf !== null && hasH3BO3 && (
+          <BatchResultTable
+            results={gfResults}
+            weightPercents={gfWeightPercents}
+            totalWeight={gfTotalWeight}
+            desiredBatch={desiredBatch}
+            title="GF-Adjusted Batch Matrix"
+            description="Batch weights with gravimetric factor applied to H3BO3"
+            showGF={true}
+          />
+        )}
+      </div>
+
+      <div className="mb-12">
+        <VisualizationSection />
+      </div>
+    </div>
+  );
+};
+
+export default BatchCalculator;
