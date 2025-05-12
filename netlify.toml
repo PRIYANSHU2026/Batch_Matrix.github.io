@@ -2,7 +2,7 @@
   remote_images = ["https://source.unsplash.com/.*", "https://images.unsplash.com/.*", "https://ext.same-assets.com/.*", "https://ugc.same-assets.com/.*"]
 
 [build]
-  command = "bun run build"
+  command = "npm run build"
   publish = "out"
 
 [build.environment]
@@ -11,7 +11,14 @@
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
+# This ensures all routes are handled by the Next.js app
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
+# Handle 404 errors
+[[redirects]]
+  from = "/*"
+  to = "/404.html"
+  status = 404

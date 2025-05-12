@@ -3,11 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -H 0.0.0.0 --turbopack",
+    "dev": "next dev -H 0.0.0.0",
     "build": "next build",
+    "export": "next export",
     "start": "next start",
-    "lint": "bunx biome lint --write && bunx tsc --noEmit",
-    "format": "bunx biome format --write"
+    "lint": "eslint . --ext .ts,.tsx",
+    "format": "prettier --write .",
+    "netlify-build": "npm run build && cp _redirects out/_redirects || true"
   },
   "dependencies": {
     "@radix-ui/react-label": "^2.1.4",

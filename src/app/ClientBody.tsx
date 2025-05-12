@@ -1,21 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
+import { BatchProvider } from '@/contexts/BatchContext';
+import BatchCalculator from '@/components/layout/BatchCalculator';
 
-export default function ClientBody({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  // Remove any extension-added classes during hydration
-  useEffect(() => {
-    // This runs only on the client after hydration
-    document.body.className = "antialiased";
-  }, []);
-
+export default function ClientBody() {
   return (
-    <body className="antialiased" suppressHydrationWarning>
-      {children}
-    </body>
+    <main className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 dark:from-slate-950 dark:to-blue-950">
+      <BatchProvider>
+        <BatchCalculator />
+      </BatchProvider>
+    </main>
   );
 }
