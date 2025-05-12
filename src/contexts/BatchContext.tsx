@@ -169,10 +169,17 @@ export function BatchProvider({ children }: { children: ReactNode }) {
   }, [precursorFormula, productFormula, precursorMoles, productMoles, atomics]);
 
   // Batch table calculations
-  const compResults = components.map((c) => ({
-    ...c,
-    molQty: (c.matrix * c.mw) / 1000,
-  }));
+  // Calculate moles for each component based on matrix percentage
+  const compResults = components.map((c) => {
+    // First determine the number of moles from the matrix percentage
+    const moles = c.matrix / 100; // Convert percentage to a decimal fraction
+
+    // Now calculate molQty as moles * molecular weight according to the corrected formula
+    return {
+      ...c,
+      molQty: moles * c.mw, // Number of moles multiplied with Mole weight of precursor
+    };
+  });
 
   const totalWeight = compResults.reduce((sum, c) => sum + c.molQty, 0);
   const weightPercents = compResults.map((c) =>
@@ -189,8 +196,8 @@ export function BatchProvider({ children }: { children: ReactNode }) {
       c.formula === "H3BO3"
         ? {
             ...c,
-            mw: c.mw * gf,
-            molQty: (c.mw * gf * c.matrix) / 1000
+            mw: c.mw * gf, // Apply GF directly to the molecular weight of the product
+            molQty: (c.matrix / 100) * (c.mw * gf) // Calculate using: moles * (Mole weight of product × GF)
           }
         : c
     );
