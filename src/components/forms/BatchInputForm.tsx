@@ -6,17 +6,37 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useBatch } from '@/contexts/BatchContext';
 import ElementAutoSuggest from './ElementAutoSuggest';
+import { molecularWeight } from '@/lib/chemistry';
 
 interface ComponentCardProps {
   index: number;
   formula: string;
   matrix: number;
   mw: number;
-  onChange: (field: 'formula' | 'matrix') => (val: string | number | { target: { value: string } }) => void;
+  productFormula: string;
+  productMW: number;
+  precursorMoles: number;
+  productMoles: number;
+  gf: number | null;
+  onChange: (field: 'formula' | 'matrix' | 'productFormula' | 'precursorMoles' | 'productMoles') =>
+    (val: string | number | { target: { value: string } }) => void;
 }
 
 // Individual precursor card
-const ComponentCard: FC<ComponentCardProps> = ({ index, formula, matrix, mw, onChange }) => {
+const ComponentCard: FC<ComponentCardProps> = ({
+  index,
+  formula,
+  matrix,
+  mw,
+  productFormula,
+  productMW,
+  precursorMoles,
+  productMoles,
+  gf,
+  onChange
+}) => {
+  const { atomics } = useBatch();
+
   return (
     <Card className="overflow-hidden backdrop-blur-sm bg-white/80 dark:bg-slate-900/80 border-blue-100 dark:border-blue-900 shadow-lg shadow-blue-500/5">
       <CardContent className="pt-4 pb-2 px-4">
@@ -28,18 +48,20 @@ const ComponentCard: FC<ComponentCardProps> = ({ index, formula, matrix, mw, onC
         </div>
 
         <div className="space-y-3">
+          {/* Precursor Formula */}
           <div className="w-full">
             <ElementAutoSuggest
               value={formula}
               onChange={onChange('formula')}
-              atomics={useBatch().atomics}
+              atomics={atomics}
               inputProps={{
-                placeholder: "Chemical Formula (e.g. CaO)",
+                placeholder: "Precursor Formula (e.g. CaO)",
                 className: "w-full"
               }}
             />
           </div>
 
+          {/* Matrix % */}
           <div className="w-full">
             <Input
               type="number"
@@ -52,6 +74,26 @@ const ComponentCard: FC<ComponentCardProps> = ({ index, formula, matrix, mw, onC
               className="w-full"
             />
           </div>
+
+          {/* Product Formula - hidden but maintained in state */}
+          <input
+            type="hidden"
+            value={productFormula || formula}
+            onChange={onChange('productFormula')}
+          />
+
+          {/* Precursor/Product Moles - hidden but maintained in state */}
+          <input
+            type="hidden"
+            value={precursorMoles || 1}
+            onChange={onChange('precursorMoles')}
+          />
+
+          <input
+            type="hidden"
+            value={productMoles || 1}
+            onChange={onChange('productMoles')}
+          />
         </div>
       </CardContent>
     </Card>
@@ -94,6 +136,11 @@ const BatchInputForm: FC = () => {
             formula={comp.formula}
             matrix={comp.matrix}
             mw={comp.mw}
+            productFormula={comp.productFormula}
+            productMW={comp.productMW}
+            precursorMoles={comp.precursorMoles}
+            productMoles={comp.productMoles}
+            gf={comp.gf}
             onChange={field => handleComponentChange(i, field)}
           />
         ))}

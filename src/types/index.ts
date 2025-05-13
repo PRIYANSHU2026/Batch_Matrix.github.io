@@ -8,31 +8,21 @@ export interface AtomicMass {
 
 // Data type for an entered component
 export interface ComponentItem {
-  formula: string;
-  matrix: number; // mol %
-  mw: number;
+  formula: string;         // Precursor formula
+  matrix: number;          // mol %
+  mw: number;              // Precursor MW
+  productFormula: string;  // Product formula (can be same as precursor)
+  productMW: number;       // Product MW
+  precursorMoles: number;  // Number of moles of precursor
+  productMoles: number;    // Number of moles of product
+  gf: number | null;       // Calculated GF for this precursor-product pair
 }
 
 // Component result with additional calculated properties
 export interface ComponentResult extends ComponentItem {
   molQty: number;
   weightPercent?: number;
-}
-
-// Data type for a product
-export interface ProductItem {
-  formula: string;
-  mw: number;
-  gf: number | null; // Gravimetric Factor for this product
-  precursorFormula: string;
-  precursorMoles: number;
-  productMoles: number;
-}
-
-// Product result with additional calculated properties
-export interface ProductResult extends ProductItem {
-  molQty: number;
-  weightPercent?: number;
+  productMolQty?: number; // For product calculations
 }
 
 // Chart data types
