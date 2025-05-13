@@ -15,13 +15,13 @@ interface ComponentCardProps {
   onChange: (field: 'formula' | 'matrix') => (val: string | number | { target: { value: string } }) => void;
 }
 
-// Individual component card
+// Individual precursor card
 const ComponentCard: FC<ComponentCardProps> = ({ index, formula, matrix, mw, onChange }) => {
   return (
     <Card className="overflow-hidden backdrop-blur-sm bg-white/80 dark:bg-slate-900/80 border-blue-100 dark:border-blue-900 shadow-lg shadow-blue-500/5">
       <CardContent className="pt-4 pb-2 px-4">
         <div className="flex justify-between mb-2">
-          <span className="text-sm font-medium text-blue-800 dark:text-blue-300">Component {index+1}</span>
+          <span className="text-sm font-medium text-blue-800 dark:text-blue-300">Precursor {index+1}</span>
           <span className="text-xs text-gray-600 dark:text-gray-400">
             MW: {mw ? mw.toFixed(3) : "-"}
           </span>
@@ -73,7 +73,7 @@ const BatchInputForm: FC = () => {
   return (
     <div className="space-y-4">
       <div className="flex flex-col space-y-2">
-        <Label htmlFor="num-components">Number of Components</Label>
+        <Label htmlFor="num-components">Number of Precursors</Label>
         <Input
           id="num-components"
           type="number"

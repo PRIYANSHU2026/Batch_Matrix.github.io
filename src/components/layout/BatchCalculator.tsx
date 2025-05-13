@@ -3,8 +3,10 @@
 import type { FC } from 'react';
 import { useBatch } from '@/contexts/BatchContext';
 import BatchInputForm from '@/components/forms/BatchInputForm';
+import BatchProductForm from '@/components/forms/BatchProductForm';
 import GFCalculatorForm from '@/components/forms/GFCalculatorForm';
 import BatchResultTable from '@/components/ui/BatchResultTable';
+import BatchProductsResultTable from '@/components/ui/BatchProductsResultTable';
 import VisualizationSection from '@/components/chart/VisualizationSection';
 
 const BatchCalculator: FC = () => {
@@ -16,10 +18,14 @@ const BatchCalculator: FC = () => {
     gfResults,
     gfWeightPercents,
     gfTotalWeight,
+    productResults,
+    productWeightPercents,
+    productTotalWeight,
     gf
   } = useBatch();
 
   const hasH3BO3 = compResults.some(comp => comp.formula === 'H3BO3');
+  const hasValidProducts = productResults.some(prod => prod.formula && prod.molQty > 0);
 
   return (
     <div className="container mx-auto px-4 py-10 max-w-7xl">
@@ -38,22 +44,27 @@ const BatchCalculator: FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
         <div className="lg:col-span-2">
-          <h2 className="text-2xl font-semibold mb-4">Batch Composition</h2>
+          <h2 className="text-2xl font-semibold mb-4">Batch Precursors</h2>
           <BatchInputForm />
         </div>
         <div>
-          <h2 className="text-2xl font-semibold mb-4">Gravimetric Factor</h2>
+          <h2 className="text-2xl font-semibold mb-4">Global Gravimetric Factor</h2>
           <GFCalculatorForm />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+      <div className="mb-12">
+        <h2 className="text-2xl font-semibold mb-4">Batch Products</h2>
+        <BatchProductForm />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         <BatchResultTable
           results={compResults}
           weightPercents={weightPercents}
           totalWeight={totalWeight}
           desiredBatch={desiredBatch}
-          title="Batch Matrix Calculation"
+          title="Precursor Matrix Calculation"
           description="Calculated batch weights based on matrix percentages"
         />
 
@@ -63,12 +74,25 @@ const BatchCalculator: FC = () => {
             weightPercents={gfWeightPercents}
             totalWeight={gfTotalWeight}
             desiredBatch={desiredBatch}
-            title="GF-Adjusted Batch Matrix"
-            description="Batch weights with gravimetric factor applied to H3BO3"
+            title="GF-Adjusted Precursor Matrix"
+            description="Precursor weights with gravimetric factor applied"
             showGF={true}
           />
         )}
       </div>
+
+      {hasValidProducts && (
+        <div className="mb-12">
+          <BatchProductsResultTable
+            results={productResults}
+            weightPercents={productWeightPercents}
+            totalWeight={productTotalWeight}
+            desiredBatch={desiredBatch}
+            title="Product Calculation Results"
+            description="Calculated product weights with gravimetric factors applied"
+          />
+        </div>
+      )}
 
       <div className="mb-12">
         <VisualizationSection />

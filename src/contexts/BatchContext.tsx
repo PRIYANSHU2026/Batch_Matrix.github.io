@@ -1,16 +1,18 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import type { AtomicMass, ComponentItem, ComponentResult, ElementComposition } from '@/types';
+import type { AtomicMass, ComponentItem, ComponentResult, ElementComposition, ProductItem, ProductResult } from '@/types';
 import { molecularWeight, calculateGF, extractElements, getElementColor } from '@/lib/chemistry';
 
 interface BatchContextType {
   // Data
   atomics: AtomicMass[];
   components: ComponentItem[];
+  products: ProductItem[];
 
   // Component inputs
   numComponents: number;
+  numProducts: number;
   desiredBatch: number;
 
   // GF Calculator
@@ -27,6 +29,9 @@ interface BatchContextType {
   gfResults: ComponentResult[];
   gfWeightPercents: number[];
   gfTotalWeight: number;
+  productResults: ProductResult[];
+  productWeightPercents: number[];
+  productTotalWeight: number;
   warning: string;
 
   // Visualization data
@@ -34,8 +39,10 @@ interface BatchContextType {
 
   // Actions
   setNumComponents: (num: number) => void;
+  setNumProducts: (num: number) => void;
   setDesiredBatch: (weight: number) => void;
   handleComponentChange: (i: number, field: "formula" | "matrix") => (val: string | number | { target: { value: string } }) => void;
+  handleProductChange: (i: number, field: "formula" | "precursorFormula" | "precursorMoles" | "productMoles") => (val: string | number | { target: { value: string } }) => void;
   setPrecursorFormula: (formula: string) => void;
   setPrecursorMoles: (moles: number) => void;
   setProductFormula: (formula: string) => void;
@@ -56,6 +63,27 @@ export function BatchProvider({ children }: { children: ReactNode }) {
   ]);
   const [numComponents, setNumComponents] = useState<number>(3);
   const [desiredBatch, setDesiredBatch] = useState<number>(5);
+
+  // Product inputs
+  const [products, setProducts] = useState<ProductItem[]>([
+    {
+      formula: "B2O3",
+      mw: 0,
+      gf: null,
+      precursorFormula: "H3BO3",
+      precursorMoles: 2,
+      productMoles: 1
+    },
+    {
+      formula: "La2O3",
+      mw: 0,
+      gf: null,
+      precursorFormula: "La2O3",
+      precursorMoles: 1,
+      productMoles: 1
+    }
+  ]);
+  const [numProducts, setNumProducts] = useState<number>(2);
 
   // GF Section
   const [precursorFormula, setPrecursorFormula] = useState("H3BO3");
@@ -94,6 +122,14 @@ export function BatchProvider({ children }: { children: ReactNode }) {
         mw: atomics.length ? molecularWeight(c.formula, atomics) || 0 : 0
       }))
     );
+
+    // Also update product MWs
+    setProducts((prev) =>
+      prev.map((p) => ({
+        ...p,
+        mw: atomics.length ? molecularWeight(p.formula, atomics) || 0 : 0
+      }))
+    );
   }, [atomics]);
 
   // Add/remove component inputs based on user selection
@@ -110,6 +146,28 @@ export function BatchProvider({ children }: { children: ReactNode }) {
       return prev.slice(0, numComponents);
     });
   }, [numComponents]);
+
+  // Add/remove product inputs based on user selection
+  useEffect(() => {
+    setProducts((prev) => {
+      if (numProducts > prev.length) {
+        return [
+          ...prev,
+          ...Array(numProducts - prev.length)
+            .fill(null)
+            .map(() => ({
+              formula: "",
+              mw: 0,
+              gf: null,
+              precursorFormula: "",
+              precursorMoles: 1,
+              productMoles: 1
+            })),
+        ];
+      }
+      return prev.slice(0, numProducts);
+    });
+  }, [numProducts]);
 
   // Handler for component input changes
   const handleComponentChange = (i: number, field: "formula" | "matrix") => (
@@ -132,6 +190,53 @@ export function BatchProvider({ children }: { children: ReactNode }) {
         updated[i] = { ...updated[i], formula: value as string, mw };
       } else {
         updated[i] = { ...updated[i], matrix: value as number };
+      }
+
+      return updated;
+    });
+  };
+
+  // Handler for product input changes
+  const handleProductChange = (
+    i: number,
+    field: "formula" | "precursorFormula" | "precursorMoles" | "productMoles"
+  ) => (
+    val: string | number | { target: { value: string } }
+  ) => {
+    // Handle event objects (from input fields)
+    let value: string | number;
+    if (val && typeof val === 'object' && 'target' in val && val.target) {
+      value = (field === "precursorMoles" || field === "productMoles")
+        ? Number(val.target.value)
+        : val.target.value;
+    } else {
+      value = val as string | number;
+    }
+
+    setProducts((prev) => {
+      const updated = [...prev];
+
+      if (field === "formula") {
+        const mw = molecularWeight(value as string, atomics) || 0;
+        updated[i] = { ...updated[i], formula: value as string, mw };
+      } else if (field === "precursorFormula") {
+        updated[i] = { ...updated[i], precursorFormula: value as string };
+      } else if (field === "precursorMoles") {
+        updated[i] = { ...updated[i], precursorMoles: value as number };
+      } else if (field === "productMoles") {
+        updated[i] = { ...updated[i], productMoles: value as number };
+      }
+
+      // Calculate GF for this product if all values are present
+      if (updated[i].precursorFormula && updated[i].formula) {
+        const calculatedGF = calculateGF(
+          updated[i].precursorFormula,
+          updated[i].formula,
+          updated[i].precursorMoles,
+          updated[i].productMoles,
+          atomics
+        );
+        updated[i] = { ...updated[i], gf: calculatedGF };
       }
 
       return updated;
@@ -186,6 +291,26 @@ export function BatchProvider({ children }: { children: ReactNode }) {
     (totalWeight > 0 ? (c.molQty / totalWeight) * desiredBatch : 0)
   );
 
+  // Calculate product results with GF
+  const productResults = products.map((p) => {
+    // If this product has a corresponding precursor in the components, use that matrix value
+    const precursorComp = components.find(c => c.formula === p.precursorFormula);
+    const moles = precursorComp ? precursorComp.matrix / 100 : 0;
+
+    // Apply GF to the calculation if available
+    const effectiveMW = p.gf !== null ? p.mw * p.gf : p.mw;
+
+    return {
+      ...p,
+      molQty: moles * effectiveMW, // Applying GF to the molecular weight
+    };
+  });
+
+  const productTotalWeight = productResults.reduce((sum, p) => sum + p.molQty, 0);
+  const productWeightPercents = productResults.map((p) =>
+    (productTotalWeight > 0 ? (p.molQty / productTotalWeight) * desiredBatch : 0)
+  );
+
   // Apply GF to H3BO3 if in list
   let gfResults = compResults;
   let gfWeightPercents = weightPercents;
@@ -196,8 +321,8 @@ export function BatchProvider({ children }: { children: ReactNode }) {
       c.formula === "H3BO3"
         ? {
             ...c,
-            mw: c.mw * gf, // Apply GF directly to the molecular weight of the product
-            molQty: (c.matrix / 100) * (c.mw * gf) // Calculate using: moles * (Mole weight of product × GF)
+            mw: c.mw * gf, // Apply GF directly to the molecular weight of the precursor
+            molQty: (c.matrix / 100) * (c.mw * gf) // Calculate using: moles * (Mole weight of precursor × GF)
           }
         : c
     );
@@ -239,9 +364,11 @@ export function BatchProvider({ children }: { children: ReactNode }) {
     // Data
     atomics,
     components,
+    products,
 
     // Component inputs
     numComponents,
+    numProducts,
     desiredBatch,
 
     // GF Calculator
@@ -258,6 +385,9 @@ export function BatchProvider({ children }: { children: ReactNode }) {
     gfResults,
     gfWeightPercents,
     gfTotalWeight,
+    productResults,
+    productWeightPercents,
+    productTotalWeight,
     warning,
 
     // Visualization data
@@ -265,8 +395,10 @@ export function BatchProvider({ children }: { children: ReactNode }) {
 
     // Actions
     setNumComponents,
+    setNumProducts,
     setDesiredBatch,
     handleComponentChange,
+    handleProductChange,
     setPrecursorFormula,
     setPrecursorMoles,
     setProductFormula,

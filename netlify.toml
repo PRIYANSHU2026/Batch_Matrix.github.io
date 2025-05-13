@@ -5,11 +5,9 @@
   command = "npm run build"
   publish = "out"
 
+# Disable the Next.js plugin as we're exporting a static site
 [build.environment]
   NETLIFY_NEXT_PLUGIN_SKIP = "true"
-
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
 
 # This ensures all routes are handled by the Next.js app
 [[redirects]]

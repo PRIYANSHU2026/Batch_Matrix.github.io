@@ -19,6 +19,22 @@ export interface ComponentResult extends ComponentItem {
   weightPercent?: number;
 }
 
+// Data type for a product
+export interface ProductItem {
+  formula: string;
+  mw: number;
+  gf: number | null; // Gravimetric Factor for this product
+  precursorFormula: string;
+  precursorMoles: number;
+  productMoles: number;
+}
+
+// Product result with additional calculated properties
+export interface ProductResult extends ProductItem {
+  molQty: number;
+  weightPercent?: number;
+}
+
 // Chart data types
 export interface ElementComposition {
   element: string;

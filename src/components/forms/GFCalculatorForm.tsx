@@ -116,7 +116,7 @@ const GFCalculatorForm: FC = () => {
             GF = (Precursor MW × Precursor Moles) ÷ (Product MW × Product Moles)
           </div>
           <div className="mt-1 text-xs text-muted-foreground font-semibold">
-            Applied as: Adjusted MW = Mole weight of product × GF
+            Applied as: Adjusted MW = Mole weight of precursor × GF
           </div>
         </div>
       </CardContent>
