@@ -2,7 +2,7 @@
   remote_images = ["https://source.unsplash.com/.*", "https://images.unsplash.com/.*", "https://ext.same-assets.com/.*", "https://ugc.same-assets.com/.*"]
 
 [build]
-  command = "npm run build"
+  command = "npm run netlify-build"
   publish = "out"
 
 # Disable the Next.js plugin as we're exporting a static site
