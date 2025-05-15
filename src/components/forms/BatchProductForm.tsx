@@ -31,10 +31,13 @@ const ProductCard: FC<ProductCardProps> = ({
   gf,
   onChange
 }) => {
-  const { atomics } = useBatch();
+  const { atomics, components } = useBatch();
 
   const precursorMW = molecularWeight(precursorFormula, atomics);
   const productMW = molecularWeight(formula, atomics);
+
+  // Filter out empty formula components
+  const availablePrecursors = components.filter(c => c.formula);
 
   return (
     <Card className="overflow-hidden backdrop-blur-sm bg-white/80 dark:bg-slate-900/80 border-green-100 dark:border-green-900 shadow-lg shadow-green-500/5">
@@ -63,21 +66,26 @@ const ProductCard: FC<ProductCardProps> = ({
         <div className="border-t pt-3 mt-2">
           <p className="text-sm font-medium mb-2 text-green-700 dark:text-green-400">Gravimetric Factor Calculator</p>
 
-          {/* Precursor Formula */}
+          {/* Precursor Formula Dropdown */}
           <div className="mb-2">
             <Label htmlFor={`precursor-formula-${index}`} className="text-xs mb-1 block">
               Precursor Formula
             </Label>
-            <ElementAutoSuggest
-              value={precursorFormula}
-              onChange={onChange('precursorFormula')}
-              atomics={atomics}
-              inputProps={{
-                id: `precursor-formula-${index}`,
-                placeholder: "e.g. H3BO3",
-                className: "w-full text-sm"
-              }}
-            />
+            <div className="relative">
+              <select
+                id={`precursor-formula-${index}`}
+                value={precursorFormula}
+                onChange={(e) => onChange('precursorFormula')(e.target.value)}
+                className="w-full text-sm rounded-md border border-input bg-background px-3 py-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                {!precursorFormula && <option value="">Select precursor</option>}
+                {availablePrecursors.map((component, idx) => (
+                  <option key={`precursor-option-${idx}`} value={component.formula}>
+                    {component.formula} (Precursor {idx+1})
+                  </option>
+                ))}
+              </select>
+            </div>
             <div className="text-xs mt-1 text-gray-500">
               MW: {precursorMW?.toFixed(4) || "-"}
             </div>
@@ -140,22 +148,19 @@ const BatchProductForm: FC = () => {
     products,
     numProducts,
     handleProductChange,
-    setNumProducts,
   } = useBatch();
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col space-y-2">
-        <Label htmlFor="num-products">Number of Products</Label>
-        <Input
-          id="num-products"
-          type="number"
-          min={1}
-          max={10}
-          value={numProducts}
-          onChange={(e: ChangeEvent<HTMLInputElement>) => setNumProducts(Number(e.target.value))}
-          className="w-full md:w-48"
-        />
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+            Products automatically linked to precursors: {numProducts}
+          </span>
+        </div>
+        <div className="text-sm text-gray-500 dark:text-gray-400">
+          Change the number of precursors to adjust
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">

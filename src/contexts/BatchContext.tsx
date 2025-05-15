@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import type { AtomicMass, ComponentItem, ComponentResult, ElementComposition, ProductItem, ProductResult } from '@/types';
-import { molecularWeight, calculateGF, extractElements, getElementColor } from '@/lib/chemistry';
+import { molecularWeight, calculateGF, extractElements, getElementColor, calculateTotalBatchWeight, calculateAdjustedBatchWeights } from '@/lib/chemistry';
 
 interface BatchContextType {
   // Data
@@ -145,13 +145,20 @@ export function BatchProvider({ children }: { children: ReactNode }) {
       }
       return prev.slice(0, numComponents);
     });
+
+    // Automatically update number of products to match number of precursors
+    setNumProducts(numComponents);
   }, [numComponents]);
 
-  // Add/remove product inputs based on user selection
+  // Add/remove product inputs based on user selection or component changes
   useEffect(() => {
     setProducts((prev) => {
+      // Make a copy of previous products
+      let updatedProducts = [...prev];
+
+      // If numProducts changed, adjust the array length
       if (numProducts > prev.length) {
-        return [
+        updatedProducts = [
           ...prev,
           ...Array(numProducts - prev.length)
             .fill(null)
@@ -164,10 +171,30 @@ export function BatchProvider({ children }: { children: ReactNode }) {
               productMoles: 1
             })),
         ];
+      } else if (numProducts < prev.length) {
+        updatedProducts = prev.slice(0, numProducts);
       }
-      return prev.slice(0, numProducts);
+
+      // Update precursor formulas based on components
+      updatedProducts = updatedProducts.map((prod, index) => {
+        if (index < components.length && components[index].formula) {
+          // If there's a corresponding component, use its formula as the precursor formula
+          if (
+            !prod.precursorFormula ||
+            !components.some(c => c.formula === prod.precursorFormula)
+          ) {
+            return {
+              ...prod,
+              precursorFormula: components[index].formula
+            };
+          }
+        }
+        return prod;
+      });
+
+      return updatedProducts;
     });
-  }, [numProducts]);
+  }, [numProducts, components]);
 
   // Handler for component input changes
   const handleComponentChange = (i: number, field: "formula" | "matrix") => (
@@ -188,6 +215,18 @@ export function BatchProvider({ children }: { children: ReactNode }) {
       if (field === "formula") {
         const mw = molecularWeight(value as string, atomics) || 0;
         updated[i] = { ...updated[i], formula: value as string, mw };
+
+        // Also update the corresponding product's precursor formula
+        if (i < products.length) {
+          setProducts(prevProducts => {
+            const updatedProducts = [...prevProducts];
+            updatedProducts[i] = {
+              ...updatedProducts[i],
+              precursorFormula: value as string
+            };
+            return updatedProducts;
+          });
+        }
       } else {
         updated[i] = { ...updated[i], matrix: value as number };
       }
@@ -274,62 +313,112 @@ export function BatchProvider({ children }: { children: ReactNode }) {
   }, [precursorFormula, productFormula, precursorMoles, productMoles, atomics]);
 
   // Batch table calculations
-  // Calculate moles for each component based on matrix percentage
+  // Calculate using the new formula: (Matrix * Molecular Weight) / 1000
   const compResults = components.map((c) => {
-    // First determine the number of moles from the matrix percentage
-    const moles = c.matrix / 100; // Convert percentage to a decimal fraction
-
-    // Updated formula: (No. Of Moles X Molecular Weight of Precursor X Matrix %)/1000 = Gram Equivalent Weight
     return {
       ...c,
-      molQty: (moles * c.mw * c.matrix) / 1000, // New formula for Precursor Method
+      molQty: (c.matrix * c.mw) / 1000, // Updated formula: (Matrix * MW) / 1000
     };
   });
 
-  const totalWeight = compResults.reduce((sum, c) => sum + c.molQty, 0);
-  const weightPercents = compResults.map((c) =>
-    (totalWeight > 0 ? (c.molQty / totalWeight) * desiredBatch : 0)
-  );
+  // Calculate total weight using the new function
+  const totalWeight = calculateTotalBatchWeight(components);
+
+  // Calculate weight percentages using the adjusted weights function
+  const batchWeights = calculateAdjustedBatchWeights(components, totalWeight, desiredBatch);
+  const weightPercents = batchWeights.map(item => item.weight);
 
   // Calculate product results with GF
   const productResults = products.map((p) => {
     // If this product has a corresponding precursor in the components, use that matrix value
     const precursorComp = components.find(c => c.formula === p.precursorFormula);
-    const moles = precursorComp ? precursorComp.matrix / 100 : 0;
+    const precursorMatrix = precursorComp ? precursorComp.matrix : 0;
 
-    // Apply GF to the calculation if available
-    // Updated formula: (Gravimetric Factor X Molecular Weight of Product X Matrix %) / 1000 = Gram Equivalent Weight
+    // Calculate the effective molecular weight with GF applied
+    const effectiveMW = p.gf !== null && p.productMoles > 0 && p.precursorMoles > 0
+      ? p.mw * p.gf
+      : p.mw;
+
+    // Apply GF to the calculation using the updated formula
     return {
       ...p,
-      molQty: p.gf !== null ? (p.gf * p.mw * (precursorComp?.matrix || 0)) / 1000 : 0, // New formula for Product Method
+      molQty: (precursorMatrix * effectiveMW) / 1000, // Updated formula: (Matrix * MW_adjusted) / 1000
     };
   });
 
+  // Calculate product total weight and adjusted weights
   const productTotalWeight = productResults.reduce((sum, p) => sum + p.molQty, 0);
-  const productWeightPercents = productResults.map((p) =>
-    (productTotalWeight > 0 ? (p.molQty / productTotalWeight) * desiredBatch : 0)
-  );
 
-  // Apply GF to H3BO3 if in list
+  // Create a format for the calculateAdjustedBatchWeights function
+  const productComponents = productResults.map(p => ({
+    formula: p.formula,
+    matrix: components.find(c => c.formula === p.precursorFormula)?.matrix || 0,
+    mw: p.gf !== null ? p.mw * p.gf : p.mw
+  }));
+
+  // Calculate product weight percentages
+  const productBatchWeights = calculateAdjustedBatchWeights(productComponents, productTotalWeight, desiredBatch);
+  const productWeightPercents = productBatchWeights.map(item => item.weight);
+
+  // Apply GF to precursors based on products
   let gfResults = compResults;
   let gfWeightPercents = weightPercents;
   let gfTotalWeight = totalWeight;
 
-  if (gf !== null && compResults.find((c) => c.formula === "H3BO3")) {
-    gfResults = compResults.map((c) =>
-      c.formula === "H3BO3"
-        ? {
-            ...c,
-            mw: c.mw * gf, // Apply GF directly to the molecular weight of the precursor
-            molQty: ((c.matrix / 100) * (c.mw * gf) * c.matrix) / 1000 // Updated formula with GF
-          }
-        : c
-    );
+  // Check if we have any valid products with GF
+  const hasValidProductsWithGF = products.some(p =>
+    p.formula &&
+    p.gf !== null &&
+    p.precursorFormula && // Must have a precursor formula
+    components.some(c => c.formula === p.precursorFormula) // Must match an existing precursor
+  );
 
+  if (hasValidProductsWithGF) {
+    // Create a map to store precursor formula -> corresponding product's GF and product formula
+    const precursorGfMap = new Map<string, { gf: number, productFormula: string }>();
+
+    // Fill the map with products' precursor formulas and their calculated GFs
+    products.forEach(p => {
+      if (p.precursorFormula && p.formula && p.gf !== null) {
+        // Only include if the precursor formula exists in the components
+        if (components.some(c => c.formula === p.precursorFormula)) {
+          precursorGfMap.set(p.precursorFormula, {
+            gf: p.gf,
+            productFormula: p.formula
+          });
+        }
+      }
+    });
+
+    // Apply the GF to all precursors that have matching products
+    gfResults = compResults.map(c => {
+      const productInfo = precursorGfMap.get(c.formula);
+
+      if (productInfo !== undefined) {
+        // Apply GF to this precursor using the updated formula
+        return {
+          ...c,
+          mw: c.mw * productInfo.gf, // Apply GF to molecular weight
+          molQty: (c.matrix * (c.mw * productInfo.gf)) / 1000, // Updated formula with GF
+          productFormula: productInfo.productFormula // Store the product formula for display
+        };
+      }
+
+      // No matching product with GF, keep the precursor as is
+      return c;
+    });
+
+    // Calculate the GF-adjusted total weight and weights using the new functions
     gfTotalWeight = gfResults.reduce((sum, c) => sum + c.molQty, 0);
-    gfWeightPercents = gfResults.map((c) =>
-      (gfTotalWeight > 0 ? (c.molQty / gfTotalWeight) * desiredBatch : 0)
-    );
+
+    // Calculate GF-adjusted weights using similar approach as batch weights
+    const gfAdjustedComponents = gfResults.map(c => ({
+      formula: c.formula,
+      matrix: c.matrix,
+      mw: c.mw,
+    }));
+    const gfBatchWeights = calculateAdjustedBatchWeights(gfAdjustedComponents, gfTotalWeight, desiredBatch);
+    gfWeightPercents = gfBatchWeights.map(item => item.weight);
   }
 
   // Generate element composition data for charts

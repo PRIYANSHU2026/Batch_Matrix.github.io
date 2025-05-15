@@ -81,3 +81,34 @@ export function getElementColor(element: string): string {
 
   return colorMap[element] || `hsl(${Math.random() * 360}, 70%, 50%)`;
 }
+
+/**
+ * Calculate total weight of the batch based on new formula
+ * Formula: (Matrix * Molecular Weight) / 1000 for each component, summed
+ */
+export function calculateTotalBatchWeight(components: { matrix: number; mw: number }[]) {
+  return components.reduce((total, comp) =>
+    total + (comp.matrix * comp.mw) / 1000, 0);
+}
+
+/**
+ * Calculate individual weights for desired batch size
+ * Formula: (Matrix * Molecular Weight / 1000) / Total Weight * Desired Batch Weight
+ */
+export function calculateAdjustedBatchWeights(
+  components: { formula: string; matrix: number; mw: number }[],
+  totalWeight: number,
+  desiredBatch: number
+) {
+  return components.map(comp => ({
+    formula: comp.formula,
+    weight: ((comp.matrix * comp.mw) / 1000 / totalWeight) * desiredBatch
+  }));
+}
+
+/**
+ * Calculate mass percentage of an element in a compound
+ */
+export function calculateMassPercent(elementCount: number, elementAtomicWeight: number, compoundMolecularWeight: number) {
+  return ((elementCount * elementAtomicWeight) / compoundMolecularWeight) * 100;
+}

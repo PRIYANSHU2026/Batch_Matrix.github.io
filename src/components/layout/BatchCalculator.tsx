@@ -20,10 +20,11 @@ const BatchCalculator: FC = () => {
     productResults,
     productWeightPercents,
     productTotalWeight,
-    gf
+    products
   } = useBatch();
 
-  const hasH3BO3 = compResults.some(comp => comp.formula === 'H3BO3');
+  // Check if any products have valid GF values
+  const hasProductsWithGF = products.some(p => p.formula && p.gf !== null);
   const hasValidProducts = productResults.some(prod => prod.formula && prod.molQty > 0);
 
   return (
@@ -61,7 +62,7 @@ const BatchCalculator: FC = () => {
           description="Calculated batch weights based on matrix percentages"
         />
 
-        {gf !== null && hasH3BO3 && (
+        {hasProductsWithGF && (
           <BatchResultTable
             results={gfResults}
             weightPercents={gfWeightPercents}

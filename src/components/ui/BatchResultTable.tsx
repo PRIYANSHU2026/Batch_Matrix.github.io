@@ -4,6 +4,7 @@ import type { FC } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { ComponentResult } from '@/types';
+import { useBatch } from '@/contexts/BatchContext';
 
 interface BatchResultTableProps {
   results: ComponentResult[];
@@ -24,6 +25,8 @@ const BatchResultTable: FC<BatchResultTableProps> = ({
   description,
   showGF = false
 }) => {
+  const { products } = useBatch();
+
   return (
     <Card>
       <CardHeader>
@@ -36,6 +39,7 @@ const BatchResultTable: FC<BatchResultTableProps> = ({
             <TableHeader>
               <TableRow>
                 <TableHead>Chemical</TableHead>
+                {showGF && <TableHead className="text-right">Product</TableHead>}
                 <TableHead className="text-right">{showGF ? 'MW × GF' : 'MW'}</TableHead>
                 <TableHead className="text-right">Matrix (%)</TableHead>
                 <TableHead className="text-right">Mol Qty</TableHead>
@@ -48,6 +52,11 @@ const BatchResultTable: FC<BatchResultTableProps> = ({
                   <TableCell className="font-medium font-mono">
                     {result.formula || '—'}
                   </TableCell>
+                  {showGF && (
+                    <TableCell className="text-right font-mono">
+                      {result.productFormula || '—'}
+                    </TableCell>
+                  )}
                   <TableCell className="text-right">{result.mw ? result.mw.toFixed(3) : '—'}</TableCell>
                   <TableCell className="text-right">{result.matrix.toFixed(3)}</TableCell>
                   <TableCell className="text-right">{result.molQty.toFixed(4)}</TableCell>
@@ -57,6 +66,7 @@ const BatchResultTable: FC<BatchResultTableProps> = ({
 
               <TableRow className="bg-muted/50">
                 <TableCell className="font-semibold">Net wt</TableCell>
+                {showGF && <TableCell />}
                 <TableCell />
                 <TableCell className="text-right font-semibold">
                   {results.reduce((a, c) => a + Number(c.matrix), 0).toFixed(3)}

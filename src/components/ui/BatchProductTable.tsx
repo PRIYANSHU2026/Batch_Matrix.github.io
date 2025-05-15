@@ -42,11 +42,12 @@ const BatchProductTable: FC<BatchProductTableProps> = ({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[180px]">Product</TableHead>
+              <TableHead className="w-[150px]">Product</TableHead>
               <TableHead>MW</TableHead>
-              <TableHead>Precursor Formula</TableHead>
+              <TableHead>Precursor</TableHead>
+              <TableHead>Ratio</TableHead>
               <TableHead>GF</TableHead>
-              <TableHead>Molar Quantity</TableHead>
+              <TableHead>Molar Qty</TableHead>
               <TableHead className="text-right">Weight (g)</TableHead>
             </TableRow>
           </TableHeader>
@@ -56,6 +57,9 @@ const BatchProductTable: FC<BatchProductTableProps> = ({
                 <TableCell className="font-medium">{result.formula || "-"}</TableCell>
                 <TableCell>{result.mw ? result.mw.toFixed(3) : "-"}</TableCell>
                 <TableCell>{result.precursorFormula || "-"}</TableCell>
+                <TableCell>
+                  {result.precursorMoles}:{result.productMoles}
+                </TableCell>
                 <TableCell>{result.gf !== null ? result.gf.toFixed(6) : "-"}</TableCell>
                 <TableCell>{result.molQty.toFixed(3)}</TableCell>
                 <TableCell className="text-right">
@@ -65,6 +69,7 @@ const BatchProductTable: FC<BatchProductTableProps> = ({
             ))}
             <TableRow className="bg-muted/50">
               <TableCell className="font-medium">Total</TableCell>
+              <TableCell></TableCell>
               <TableCell></TableCell>
               <TableCell></TableCell>
               <TableCell></TableCell>

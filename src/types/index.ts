@@ -1,4 +1,6 @@
-// Data types for atomic mass info
+/**
+ * Data types for atomic mass info
+ */
 export interface AtomicMass {
   Symbol: string;
   "Atomic Mass": number;
@@ -6,20 +8,27 @@ export interface AtomicMass {
   "Atomic Number"?: number;
 }
 
-// Data type for an entered component
+/**
+ * Data type for an entered component
+ */
 export interface ComponentItem {
   formula: string;
   matrix: number; // mol %
   mw: number;
 }
 
-// Component result with additional calculated properties
+/**
+ * Component result with additional calculated properties
+ */
 export interface ComponentResult extends ComponentItem {
   molQty: number;
   weightPercent?: number;
+  productFormula?: string; // Optional property to store the related product formula for GF-adjusted results
 }
 
-// Data type for a product
+/**
+ * Data type for a product
+ */
 export interface ProductItem {
   formula: string;
   mw: number;
@@ -29,13 +38,17 @@ export interface ProductItem {
   productMoles: number;
 }
 
-// Product result with additional calculated properties
+/**
+ * Product result with additional calculated properties
+ */
 export interface ProductResult extends ProductItem {
   molQty: number;
   weightPercent?: number;
 }
 
-// Chart data types
+/**
+ * Chart data types
+ */
 export interface ElementComposition {
   element: string;
   percentage: number;

@@ -44,6 +44,7 @@ const BatchProductsResultTable: FC<BatchProductsResultTableProps> = ({
             <TableRow>
               <TableHead>Product</TableHead>
               <TableHead>Precursor</TableHead>
+              <TableHead>Ratio</TableHead>
               <TableHead>GF</TableHead>
               <TableHead>MW eff.</TableHead>
               <TableHead className="text-right">Weight (g)</TableHead>
@@ -57,6 +58,9 @@ const BatchProductsResultTable: FC<BatchProductsResultTableProps> = ({
                   <TableRow key={`product-result-${result.formula}-${i}`}>
                     <TableCell className="font-mono text-sm">{result.formula}</TableCell>
                     <TableCell className="font-mono text-sm">{result.precursorFormula}</TableCell>
+                    <TableCell className="font-mono text-sm">
+                      {result.precursorMoles}:{result.productMoles}
+                    </TableCell>
                     <TableCell className="font-mono text-sm">
                       {result.gf !== null ? result.gf.toFixed(4) : "—"}
                     </TableCell>
@@ -75,7 +79,7 @@ const BatchProductsResultTable: FC<BatchProductsResultTableProps> = ({
                   </TableRow>
                 ))}
                 <TableRow className="border-t-2">
-                  <TableCell colSpan={4} className="font-medium">
+                  <TableCell colSpan={5} className="font-medium">
                     Total
                   </TableCell>
                   <TableCell className="text-right font-mono font-semibold">
@@ -88,7 +92,7 @@ const BatchProductsResultTable: FC<BatchProductsResultTableProps> = ({
               </>
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-4 text-muted-foreground">
                   No valid products to display. Add products with their precursors to see results.
                 </TableCell>
               </TableRow>
