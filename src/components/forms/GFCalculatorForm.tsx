@@ -116,7 +116,10 @@ const GFCalculatorForm: FC = () => {
             GF = (Precursor MW × Precursor Moles) ÷ (Product MW × Product Moles)
           </div>
           <div className="mt-1 text-xs text-muted-foreground font-semibold">
-            Applied as: Adjusted MW = Mole weight of precursor × GF
+            For Precursor Method: (No. Of Moles × Molecular Weight of Precursor × Matrix %) ÷ 1000 = Gram Equivalent Weight
+          </div>
+          <div className="mt-1 text-xs text-muted-foreground font-semibold">
+            For Product Method: (Gravimetric Factor × Molecular Weight of Product × Matrix %) ÷ 1000 = Gram Equivalent Weight
           </div>
         </div>
       </CardContent>

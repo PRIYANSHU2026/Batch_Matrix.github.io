@@ -18,13 +18,19 @@ const ElementAutoSuggest: FC<ElementAutoSuggestProps> = ({ value, onChange, atom
 
   const val = value || "";
   const trimmed = val.trim();
+
+  // Modified to make suggestions less aggressive - only suggest if a single letter is entered
   const lastToken = trimmed.match(/[A-Z][a-z]*$/)?.[0] ?? "";
 
-  const suggestions = (lastToken.length > 0 && atomics.length > 0)
+  // Only show suggestions if the user is specifically looking for element suggestions
+  // by starting with a capital letter
+  const showSuggestions = lastToken.length > 0 && /^[A-Z]/.test(lastToken);
+
+  const suggestions = (showSuggestions && atomics.length > 0)
     ? atomics
         .filter(a =>
-          a.Symbol.toLowerCase().includes(lastToken.toLowerCase()) ||
-          a.Element?.toLowerCase().includes(lastToken.toLowerCase())
+          a.Symbol.toLowerCase().startsWith(lastToken.toLowerCase()) ||
+          a.Element?.toLowerCase().startsWith(lastToken.toLowerCase())
         )
         .slice(0, 10) // max 10 suggestions
     : [];
@@ -71,8 +77,13 @@ const ElementAutoSuggest: FC<ElementAutoSuggestProps> = ({ value, onChange, atom
     }
 
     onChange(newVal);
-    setFocused(false);
+    // Keep focus so user can continue typing
     setHighlight(-1);
+
+    // Don't close the dropdown automatically to allow further element selections
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
   };
 
   // Hide dropdown if unfocused

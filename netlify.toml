@@ -2,21 +2,17 @@
   remote_images = ["https://source.unsplash.com/.*", "https://images.unsplash.com/.*", "https://ext.same-assets.com/.*", "https://ugc.same-assets.com/.*"]
 
 [build]
-  command = "npm run netlify-build"
+  command = "bun run build"
   publish = "out"
 
-# Disable the Next.js plugin as we're exporting a static site
 [build.environment]
+  NEXT_PUBLIC_SITE_URL = "https://batch-matrix.netlify.app"
   NETLIFY_NEXT_PLUGIN_SKIP = "true"
 
-# This ensures all routes are handled by the Next.js app
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-
-# Handle 404 errors
-[[redirects]]
-  from = "/*"
-  to = "/404.html"
-  status = 404

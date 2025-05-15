@@ -279,10 +279,10 @@ export function BatchProvider({ children }: { children: ReactNode }) {
     // First determine the number of moles from the matrix percentage
     const moles = c.matrix / 100; // Convert percentage to a decimal fraction
 
-    // Now calculate molQty as moles * molecular weight according to the corrected formula
+    // Updated formula: (No. Of Moles X Molecular Weight of Precursor X Matrix %)/1000 = Gram Equivalent Weight
     return {
       ...c,
-      molQty: moles * c.mw, // Number of moles multiplied with Mole weight of precursor
+      molQty: (moles * c.mw * c.matrix) / 1000, // New formula for Precursor Method
     };
   });
 
@@ -298,11 +298,10 @@ export function BatchProvider({ children }: { children: ReactNode }) {
     const moles = precursorComp ? precursorComp.matrix / 100 : 0;
 
     // Apply GF to the calculation if available
-    const effectiveMW = p.gf !== null ? p.mw * p.gf : p.mw;
-
+    // Updated formula: (Gravimetric Factor X Molecular Weight of Product X Matrix %) / 1000 = Gram Equivalent Weight
     return {
       ...p,
-      molQty: moles * effectiveMW, // Applying GF to the molecular weight
+      molQty: p.gf !== null ? (p.gf * p.mw * (precursorComp?.matrix || 0)) / 1000 : 0, // New formula for Product Method
     };
   });
 
@@ -322,7 +321,7 @@ export function BatchProvider({ children }: { children: ReactNode }) {
         ? {
             ...c,
             mw: c.mw * gf, // Apply GF directly to the molecular weight of the precursor
-            molQty: (c.matrix / 100) * (c.mw * gf) // Calculate using: moles * (Mole weight of precursor × GF)
+            molQty: ((c.matrix / 100) * (c.mw * gf) * c.matrix) / 1000 // Updated formula with GF
           }
         : c
     );

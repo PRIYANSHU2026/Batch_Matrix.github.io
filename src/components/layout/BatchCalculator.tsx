@@ -4,7 +4,6 @@ import type { FC } from 'react';
 import { useBatch } from '@/contexts/BatchContext';
 import BatchInputForm from '@/components/forms/BatchInputForm';
 import BatchProductForm from '@/components/forms/BatchProductForm';
-import GFCalculatorForm from '@/components/forms/GFCalculatorForm';
 import BatchResultTable from '@/components/ui/BatchResultTable';
 import BatchProductsResultTable from '@/components/ui/BatchProductsResultTable';
 import VisualizationSection from '@/components/chart/VisualizationSection';
@@ -42,15 +41,9 @@ const BatchCalculator: FC = () => {
         </p>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-        <div className="lg:col-span-2">
-          <h2 className="text-2xl font-semibold mb-4">Batch Precursors</h2>
-          <BatchInputForm />
-        </div>
-        <div>
-          <h2 className="text-2xl font-semibold mb-4">Global Gravimetric Factor</h2>
-          <GFCalculatorForm />
-        </div>
+      <div className="mb-12">
+        <h2 className="text-2xl font-semibold mb-4">Batch Precursors</h2>
+        <BatchInputForm />
       </div>
 
       <div className="mb-12">

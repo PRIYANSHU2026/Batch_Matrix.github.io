@@ -125,7 +125,7 @@ const ProductCard: FC<ProductCardProps> = ({
               </div>
             </div>
             <div className="mt-1 text-xs text-muted-foreground">
-              Applied as: Adjusted MW = Mole weight of precursor × GF
+              Formula: (Gravimetric Factor × Molecular Weight of Product × Matrix %) ÷ 1000 = Gram Equivalent Weight
             </div>
           </div>
         </div>
