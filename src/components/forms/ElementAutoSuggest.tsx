@@ -80,9 +80,24 @@ const ElementAutoSuggest: FC<ElementAutoSuggestProps> = ({ value, onChange, atom
     // Keep focus so user can continue typing
     setHighlight(-1);
 
+    // Save current selection position for cursor restoration
+    const selectionStart = inputRef.current?.selectionStart || 0;
+    const selectionEnd = inputRef.current?.selectionEnd || 0;
+
+    // Determine new cursor position after suggestion
+    const positionAdjustment = suggestions[idx].Symbol.length - lastToken.length;
+    const newPosition = selectionStart + positionAdjustment;
+
     // Don't close the dropdown automatically to allow further element selections
     if (inputRef.current) {
       inputRef.current.focus();
+
+      // Restore cursor position after React updates the DOM
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.setSelectionRange(newPosition, newPosition);
+        }
+      }, 0);
     }
   };
 
@@ -105,7 +120,18 @@ const ElementAutoSuggest: FC<ElementAutoSuggestProps> = ({ value, onChange, atom
         value={val}
         onFocus={() => setFocused(true)}
         onBlur={onBlur}
-        onChange={e => { onChange(e.target.value); setHighlight(-1); }}
+        onChange={e => {
+          const cursorPosition = e.target.selectionStart;
+          onChange(e.target.value);
+          setHighlight(-1);
+
+          // Restore cursor position after React updates the DOM
+          setTimeout(() => {
+            if (inputRef.current && cursorPosition !== null) {
+              inputRef.current.setSelectionRange(cursorPosition, cursorPosition);
+            }
+          }, 0);
+        }}
         onKeyDown={onKeyDown}
         autoComplete="off"
       />

@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useBatch } from '@/contexts/BatchContext';
 import { molecularWeight } from '@/lib/chemistry';
+import { calculateGravimetricFactor, calculateComponentWeight, calculateTotalWeightWithGF } from '@/lib/gfUtils';
 
 const GFCalculatorForm: FC = () => {
   const {
@@ -121,6 +122,37 @@ const GFCalculatorForm: FC = () => {
           <div className="mt-1 text-xs text-muted-foreground font-semibold">
             For Product Method: (Gravimetric Factor × Molecular Weight of Product × Matrix %) ÷ 1000 = Gram Equivalent Weight
           </div>
+
+          {/* Test Section for Formula Verification */}
+          {gf !== null && (
+            <div className="mt-4 p-3 bg-slate-100 dark:bg-slate-800 rounded-md">
+              <div className="text-sm font-medium mb-2">Formula Verification (New Implementation)</div>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div>Precursor MW:</div>
+                <div className="font-mono">{molecularWeight(precursorFormula, atomics)?.toFixed(4) || "—"}</div>
+
+                <div>Product MW:</div>
+                <div className="font-mono">{molecularWeight(productFormula, atomics)?.toFixed(4) || "—"}</div>
+
+                <div>GF Direct Calculation:</div>
+                <div className="font-mono">
+                  {molecularWeight(precursorFormula, atomics) && molecularWeight(productFormula, atomics) ?
+                    calculateGravimetricFactor(
+                      molecularWeight(precursorFormula, atomics)!,
+                      precursorMoles,
+                      molecularWeight(productFormula, atomics)!,
+                      productMoles
+                    ).toFixed(6) : "—"}
+                </div>
+
+                <div>Component Weight (30% Matrix):</div>
+                <div className="font-mono">
+                  {gf && molecularWeight(precursorFormula, atomics) ?
+                    calculateComponentWeight(30, molecularWeight(precursorFormula, atomics)!, gf).toFixed(6) : "—"}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

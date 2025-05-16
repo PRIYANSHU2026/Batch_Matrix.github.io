@@ -45,7 +45,8 @@ export function calculateGF(
     return null;
   }
 
-  return (precursorMoles * pMW) / (productMoles * prMW);
+  // Use the corrected formula for GF calculation
+  return (pMW * precursorMoles) / (prMW * productMoles);
 }
 
 // Extract individual elements from a compound with their quantities

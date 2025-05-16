@@ -3,6 +3,8 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import type { AtomicMass, ComponentItem, ComponentResult, ElementComposition, ProductItem, ProductResult } from '@/types';
 import { molecularWeight, calculateGF, extractElements, getElementColor, calculateTotalBatchWeight, calculateAdjustedBatchWeights } from '@/lib/chemistry';
+import { calculateGravimetricFactor, calculateComponentWeight, calculateTotalWeightWithGF, calculateBatchWeights } from '@/lib/gfUtils';
+import { calculateMolecularWeight, calculateMassPercent, calculateTotalWeight, calculateAdjustedWeights, formulaToElementsArray } from '@/lib/batchCalculations';
 
 interface BatchContextType {
   // Data
@@ -390,35 +392,45 @@ export function BatchProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    // Apply the GF to all precursors that have matching products
+    // Format components for GF calculation using new formula
+    const componentsWithGF = components.map(c => {
+      const productInfo = precursorGfMap.get(c.formula);
+      return {
+        precursor: c.formula,
+        matrix: c.matrix,
+        molecularWeight: c.mw,
+        gf: productInfo?.gf || 1 // Use GF if available, otherwise 1 (no adjustment)
+      };
+    });
+
+    // Calculate total weight with GF using the new function
+    gfTotalWeight = calculateTotalWeightWithGF(componentsWithGF);
+
+    // Calculate batch weights with the new function
+    const newGfBatchWeights = calculateBatchWeights(componentsWithGF, gfTotalWeight, desiredBatch);
+
+    // Update gfWeightPercents
+    gfWeightPercents = newGfBatchWeights.map(item => item.weight);
+
+    // Apply the GF to all precursors that have matching products for display
     gfResults = compResults.map(c => {
       const productInfo = precursorGfMap.get(c.formula);
+      const matchingGfWeight = newGfBatchWeights.find(item => item.precursor === c.formula);
 
       if (productInfo !== undefined) {
-        // Apply GF to this precursor using the updated formula
+        // Apply GF to this precursor using the new formula
         return {
           ...c,
           mw: c.mw * productInfo.gf, // Apply GF to molecular weight
-          molQty: (c.matrix * (c.mw * productInfo.gf)) / 1000, // Updated formula with GF
-          productFormula: productInfo.productFormula // Store the product formula for display
+          molQty: calculateComponentWeight(c.matrix, c.mw, productInfo.gf), // Use new function
+          productFormula: productInfo.productFormula, // Store the product formula for display
+          adjustedWeight: matchingGfWeight?.weight || 0
         };
       }
 
       // No matching product with GF, keep the precursor as is
       return c;
     });
-
-    // Calculate the GF-adjusted total weight and weights using the new functions
-    gfTotalWeight = gfResults.reduce((sum, c) => sum + c.molQty, 0);
-
-    // Calculate GF-adjusted weights using similar approach as batch weights
-    const gfAdjustedComponents = gfResults.map(c => ({
-      formula: c.formula,
-      matrix: c.matrix,
-      mw: c.mw,
-    }));
-    const gfBatchWeights = calculateAdjustedBatchWeights(gfAdjustedComponents, gfTotalWeight, desiredBatch);
-    gfWeightPercents = gfBatchWeights.map(item => item.weight);
   }
 
   // Generate element composition data for charts
