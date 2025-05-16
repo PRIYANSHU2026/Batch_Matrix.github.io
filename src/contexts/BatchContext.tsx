@@ -314,20 +314,31 @@ export function BatchProvider({ children }: { children: ReactNode }) {
     setGf(calculatedGF);
   }, [precursorFormula, productFormula, precursorMoles, productMoles, atomics]);
 
+  // Create a map of precursor formulas to their mole ratios
+  const precursorMolesMap = new Map<string, number>();
+  products.forEach(p => {
+    if (p.precursorFormula) {
+      precursorMolesMap.set(p.precursorFormula, p.precursorMoles);
+    }
+  });
+
   // Batch table calculations
-  // Calculate using the new formula: (Matrix * Molecular Weight) / 1000
+  // Calculate using the new formula: (Matrix * Molecular Weight * Precursor Moles) / 1000
   const compResults = components.map((c) => {
+    // Find matching product for this precursor to get the mole ratio
+    const precursorMoles = precursorMolesMap.get(c.formula) || 1; // Default to 1 if no matching product
+
     return {
       ...c,
-      molQty: (c.matrix * c.mw) / 1000, // Updated formula: (Matrix * MW) / 1000
+      molQty: (c.matrix * c.mw * precursorMoles) / 1000, // Updated formula: (Matrix * MW * Precursor Moles) / 1000
     };
   });
 
-  // Calculate total weight using the new function
-  const totalWeight = calculateTotalBatchWeight(components);
+  // Calculate total weight using the new function with moles
+  const totalWeight = calculateTotalBatchWeight(components, precursorMolesMap);
 
-  // Calculate weight percentages using the adjusted weights function
-  const batchWeights = calculateAdjustedBatchWeights(components, totalWeight, desiredBatch);
+  // Calculate weight percentages using the adjusted weights function with moles
+  const batchWeights = calculateAdjustedBatchWeights(components, totalWeight, desiredBatch, precursorMolesMap);
   const weightPercents = batchWeights.map(item => item.weight);
 
   // Calculate product results with GF
@@ -341,7 +352,7 @@ export function BatchProvider({ children }: { children: ReactNode }) {
       ? p.mw * p.gf
       : p.mw;
 
-    // Apply GF to the calculation using the updated formula
+    // Apply GF to the calculation using the updated formula without product moles
     return {
       ...p,
       molQty: (precursorMatrix * effectiveMW) / 1000, // Updated formula: (Matrix * MW_adjusted) / 1000
@@ -351,6 +362,14 @@ export function BatchProvider({ children }: { children: ReactNode }) {
   // Calculate product total weight and adjusted weights
   const productTotalWeight = productResults.reduce((sum, p) => sum + p.molQty, 0);
 
+  // Create a map of product formulas to their mole values
+  const productMolesMap = new Map<string, number>();
+  products.forEach(p => {
+    if (p.formula) {
+      productMolesMap.set(p.formula, p.productMoles);
+    }
+  });
+
   // Create a format for the calculateAdjustedBatchWeights function
   const productComponents = productResults.map(p => ({
     formula: p.formula,
@@ -358,8 +377,13 @@ export function BatchProvider({ children }: { children: ReactNode }) {
     mw: p.gf !== null ? p.mw * p.gf : p.mw
   }));
 
-  // Calculate product weight percentages
-  const productBatchWeights = calculateAdjustedBatchWeights(productComponents, productTotalWeight, desiredBatch);
+  // Calculate product weight percentages without using product moles
+  const productBatchWeights = calculateAdjustedBatchWeights(
+    productComponents,
+    productTotalWeight,
+    desiredBatch
+    // No product moles map passed here
+  );
   const productWeightPercents = productBatchWeights.map(item => item.weight);
 
   // Apply GF to precursors based on products
@@ -376,8 +400,13 @@ export function BatchProvider({ children }: { children: ReactNode }) {
   );
 
   if (hasValidProductsWithGF) {
-    // Create a map to store precursor formula -> corresponding product's GF and product formula
-    const precursorGfMap = new Map<string, { gf: number, productFormula: string }>();
+    // Create a map to store precursor formula -> corresponding product data
+    const precursorGfMap = new Map<string, {
+      gf: number,
+      productFormula: string,
+      productMW: number,
+      productMoles: number
+    }>();
 
     // Fill the map with products' precursor formulas and their calculated GFs
     products.forEach(p => {
@@ -386,20 +415,22 @@ export function BatchProvider({ children }: { children: ReactNode }) {
         if (components.some(c => c.formula === p.precursorFormula)) {
           precursorGfMap.set(p.precursorFormula, {
             gf: p.gf,
-            productFormula: p.formula
+            productFormula: p.formula,
+            productMW: p.mw,
+            productMoles: p.productMoles
           });
         }
       }
     });
 
-    // Format components for GF calculation using new formula
+    // Format components for GF calculation using product MW directly (without moles)
     const componentsWithGF = components.map(c => {
       const productInfo = precursorGfMap.get(c.formula);
       return {
         precursor: c.formula,
         matrix: c.matrix,
-        molecularWeight: c.mw,
-        gf: productInfo?.gf || 1 // Use GF if available, otherwise 1 (no adjustment)
+        molecularWeight: productInfo?.productMW || c.mw, // Use product MW if available
+        gf: 1 // Set GF to 1 as we're using product MW directly, not applying GF
       };
     });
 
@@ -418,11 +449,11 @@ export function BatchProvider({ children }: { children: ReactNode }) {
       const matchingGfWeight = newGfBatchWeights.find(item => item.precursor === c.formula);
 
       if (productInfo !== undefined) {
-        // Apply GF to this precursor using the new formula
+        // Use product MW directly, without considering precursor moles
         return {
           ...c,
-          mw: c.mw * productInfo.gf, // Apply GF to molecular weight
-          molQty: calculateComponentWeight(c.matrix, c.mw, productInfo.gf), // Use new function
+          mw: productInfo.productMW, // Use product MW directly
+          molQty: (c.matrix * productInfo.productMW) / 1000, // Use only product MW, without precursor moles
           productFormula: productInfo.productFormula, // Store the product formula for display
           adjustedWeight: matchingGfWeight?.weight || 0
         };

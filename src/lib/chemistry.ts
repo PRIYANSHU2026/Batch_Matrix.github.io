@@ -85,26 +85,36 @@ export function getElementColor(element: string): string {
 
 /**
  * Calculate total weight of the batch based on new formula
- * Formula: (Matrix * Molecular Weight) / 1000 for each component, summed
+ * Formula: (Matrix * Molecular Weight * Moles) / 1000 for each component, summed
  */
-export function calculateTotalBatchWeight(components: { matrix: number; mw: number }[]) {
-  return components.reduce((total, comp) =>
-    total + (comp.matrix * comp.mw) / 1000, 0);
+export function calculateTotalBatchWeight(
+  components: { matrix: number; mw: number; formula?: string }[],
+  productMolesMap?: Map<string, number>
+) {
+  return components.reduce((total, comp) => {
+    // Default to 1 if no moles mapping provided
+    const moles = comp.formula && productMolesMap?.get(comp.formula) || 1;
+    return total + (comp.matrix * comp.mw * moles) / 1000;
+  }, 0);
 }
 
 /**
  * Calculate individual weights for desired batch size
- * Formula: (Matrix * Molecular Weight / 1000) / Total Weight * Desired Batch Weight
+ * Formula: (Matrix * Molecular Weight * Moles / 1000) / Total Weight * Desired Batch Weight
  */
 export function calculateAdjustedBatchWeights(
   components: { formula: string; matrix: number; mw: number }[],
   totalWeight: number,
-  desiredBatch: number
+  desiredBatch: number,
+  productMolesMap?: Map<string, number>
 ) {
-  return components.map(comp => ({
-    formula: comp.formula,
-    weight: ((comp.matrix * comp.mw) / 1000 / totalWeight) * desiredBatch
-  }));
+  return components.map(comp => {
+    const moles = productMolesMap?.get(comp.formula) || 1;
+    return {
+      formula: comp.formula,
+      weight: ((comp.matrix * comp.mw * moles) / 1000 / totalWeight) * desiredBatch
+    };
+  });
 }
 
 /**

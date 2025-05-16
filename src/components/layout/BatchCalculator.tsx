@@ -59,7 +59,7 @@ const BatchCalculator: FC = () => {
           totalWeight={totalWeight}
           desiredBatch={desiredBatch}
           title="Precursor Matrix Calculation"
-          description="Calculated batch weights based on matrix percentages"
+          description="(MW × Precursor Moles × Matrix)/1000 = Mol Qty. Each Mol Qty/Net wt = Batch wt (g)"
         />
 
         {hasProductsWithGF && (
@@ -69,7 +69,7 @@ const BatchCalculator: FC = () => {
             totalWeight={gfTotalWeight}
             desiredBatch={desiredBatch}
             title="GF-Adjusted Precursor Matrix"
-            description="Precursor weights with gravimetric factor applied"
+            description="(Product MW × Matrix)/1000 = Mol Qty. Each Mol Qty/Net wt = Batch wt (g)"
             showGF={true}
           />
         )}

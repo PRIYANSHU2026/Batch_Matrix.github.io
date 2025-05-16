@@ -38,8 +38,7 @@ const BatchResultTable: FC<BatchResultTableProps> = ({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Chemical</TableHead>
-                {showGF && <TableHead className="text-right">Product</TableHead>}
+                <TableHead>{showGF ? 'Product' : 'Precursor'}</TableHead>
                 <TableHead className="text-right">{showGF ? 'MW × GF' : 'MW'}</TableHead>
                 <TableHead className="text-right">Matrix (%)</TableHead>
                 <TableHead className="text-right">Mol Qty</TableHead>
@@ -50,13 +49,8 @@ const BatchResultTable: FC<BatchResultTableProps> = ({
               {results.map((result, index) => (
                 <TableRow key={result.formula || `result-${index}`}>
                   <TableCell className="font-medium font-mono">
-                    {result.formula || '—'}
+                    {showGF ? (result.productFormula || result.formula || '—') : (result.formula || '—')}
                   </TableCell>
-                  {showGF && (
-                    <TableCell className="text-right font-mono">
-                      {result.productFormula || '—'}
-                    </TableCell>
-                  )}
                   <TableCell className="text-right">{result.mw ? result.mw.toFixed(3) : '—'}</TableCell>
                   <TableCell className="text-right">{result.matrix.toFixed(3)}</TableCell>
                   <TableCell className="text-right">{result.molQty.toFixed(4)}</TableCell>
@@ -66,7 +60,6 @@ const BatchResultTable: FC<BatchResultTableProps> = ({
 
               <TableRow className="bg-muted/50">
                 <TableCell className="font-semibold">Net wt</TableCell>
-                {showGF && <TableCell />}
                 <TableCell />
                 <TableCell className="text-right font-semibold">
                   {results.reduce((a, c) => a + Number(c.matrix), 0).toFixed(3)}
